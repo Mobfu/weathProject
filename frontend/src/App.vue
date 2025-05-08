@@ -14,7 +14,7 @@ import WeatherRealtime from './components/WeatherRealtime.vue'
     </a>
   </div>
   <div>
-    <h1>天气应用</h1>
+    <h1>Weather APP</h1>
     <WeatherForm />
     <WeatherRealtime />
     <WeatherList />

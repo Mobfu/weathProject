@@ -13,6 +13,9 @@ use App\Service\WeatherApiService;
 #[Route('/api/weather')]
 class WeatherController extends AbstractController
 {
+    /**
+     * Get all weather records from the database.
+     */
     #[Route('', name: 'weather_index', methods: ['GET'])]
     public function index(EntityManagerInterface $em): JsonResponse
     {
@@ -20,12 +23,16 @@ class WeatherController extends AbstractController
         return $this->json($weatherData);
     }
 
+    /**
+     * Create a new weather record based on POSTed JSON data.
+     * Expects: city, temperature, windSpeed, date, description
+     */
     #[Route('', name: 'weather_create', methods: ['POST'])]
     public function create(Request $request, EntityManagerInterface $em): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
-        // ✅ 输出内容调试
+        // Ensure 'date' is provided
         if (!isset($data['date'])) {
             return $this->json(['error' => 'Missing date field'], 400);
         }
@@ -36,20 +43,24 @@ class WeatherController extends AbstractController
             return $this->json(['error' => 'Invalid date format'], 400);
         }
 
+        // Create and populate new Weather entity
         $weather = new Weather();
         $weather->setCity($data['city'] ?? '');
         $weather->setTemperature((float)($data['temperature'] ?? 0));
         $weather->setWindSpeed((float)($data['windSpeed'] ?? 0));
         $weather->setDate($date);
-        $weather->setDescription($data['description'] ?? ''); // 如果有这个字段
+        $weather->setDescription($data['description'] ?? '');
 
+        // Persist to the database
         $em->persist($weather);
         $em->flush();
 
         return $this->json($weather, 201);
     }
 
-
+    /**
+     * Get one weather record by ID.
+     */
     #[Route('/{id}', name: 'weather_show', methods: ['GET'])]
     public function show(int $id, EntityManagerInterface $em): JsonResponse
     {
@@ -62,6 +73,9 @@ class WeatherController extends AbstractController
         return $this->json($weather);
     }
 
+    /**
+     * Update a weather record by ID.
+     */
     #[Route('/{id}', name: 'weather_update', methods: ['PUT'])]
     public function update(int $id, Request $request, EntityManagerInterface $em): JsonResponse
     {
@@ -82,6 +96,9 @@ class WeatherController extends AbstractController
         return $this->json($weather);
     }
 
+    /**
+     * Delete a weather record by ID.
+     */
     #[Route('/{id}', name: 'weather_delete', methods: ['DELETE'])]
     public function delete(int $id, EntityManagerInterface $em): JsonResponse
     {
@@ -97,6 +114,10 @@ class WeatherController extends AbstractController
         return $this->json(['message' => 'Weather deleted']);
     }
 
+    /**
+     * Fetch current weather data from Open-Meteo API for a given city,
+     * store it into the database, and return it.
+     */
     #[Route('/realtime/{city}', name: 'weather_realtime', methods: ['GET'])]
     public function getRealtimeWeather(
         string $city,
@@ -123,5 +144,4 @@ class WeatherController extends AbstractController
 
         return $this->json($weather, 201);
     }
-
 }
